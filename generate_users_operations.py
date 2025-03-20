@@ -1,52 +1,52 @@
-# -*- coding: utf-8 -*-
+ï»¿# -*- coding: utf-8 -*-
 import pandas as pd
 import random
 import numpy as np
 from generate_videos import generate_videos
 
 def generate_day_weights():
-    # Éú³ÉÆßÌìµÄÈ¨ÖØ£¬Ã¿¸öÈ¨ÖØ²»µÍÓÚ0.1ÇÒ²»¸ßÓÚ0.4
+    # ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¨ï¿½Ø£ï¿½Ã¿ï¿½ï¿½È¨ï¿½Ø²ï¿½ï¿½ï¿½ï¿½ï¿½0.1ï¿½Ò²ï¿½ï¿½ï¿½ï¿½ï¿½0.4
     weights = np.random.uniform(0.1, 0.4, 7)
-    weights /= weights.sum()  # ¹éÒ»»¯È·±£×ÜºÍÎª1
+    weights /= weights.sum()  # ï¿½ï¿½Ò»ï¿½ï¿½È·ï¿½ï¿½ï¿½Üºï¿½Îª1
     return weights
 
 def generate_days(num_ops):
-    # ¸ù¾ÝËæ»úÉú³ÉµÄÈ¨ÖØ·ÖÅäÌìÊý
+    # ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Éµï¿½È¨ï¿½Ø·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     weights = generate_day_weights()
     
-    # ¸ù¾ÝÈ¨ÖØÉú³ÉÌìÊýÐòÁÐ
+    # ï¿½ï¿½ï¿½ï¿½È¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     days = np.random.choice(np.arange(1, 8), num_ops, p=weights)
     
-    # °´Ê±¼äË³ÐòÅÅÁÐ
+    # ï¿½ï¿½Ê±ï¿½ï¿½Ë³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     days = np.sort(days)
     
     return days.tolist()
 
 def generate_users_operations():
-    # ÅäÖÃ²ÎÊý
+    # ï¿½ï¿½ï¿½Ã²ï¿½ï¿½ï¿½
     num_users = 10_000
     num_videos = 100_000
     min_ops, max_ops = 100, 200
     
-    # ³õÊ¼»¯ÓÃ»§ÄêÁä£¬²ÉÓÃÕýÌ¬·Ö²¼¸ü·ûºÏÊµ¼ÊÇé¿ö
-    ages = np.random.normal(loc=35, scale=10, size=num_users)  # ¾ùÖµ35£¬±ê×¼²î10
-    ages = np.clip(ages, 18, 60).astype(int)  # ÏÞÖÆÄêÁä·¶Î§ÔÚ18-60Ëê
+    # ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ä£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¬ï¿½Ö²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½
+    ages = np.random.normal(loc=35, scale=10, size=num_users)  # ï¿½ï¿½Öµ35ï¿½ï¿½ï¿½ï¿½×¼ï¿½ï¿½10
+    ages = np.clip(ages, 18, 60).astype(int)  # ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ä·¶Î§ï¿½ï¿½18-60ï¿½ï¿½
     
     users = pd.DataFrame({
         'id': range(1, num_users + 1),
         'age': ages
     })
     
-    # ³õÊ¼»¯ÊÓÆµÍ³¼ÆÐÅÏ¢£¨ÓÃNumPy¼ÓËÙ£©
+    # ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ÆµÍ³ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½NumPyï¿½ï¿½ï¿½Ù£ï¿½
     views = np.zeros(num_videos, dtype=int)
     likes = np.zeros(num_videos, dtype=int)
     
-    # ¶ÁÈ¡ÊÓÆµÊý¾Ý
+    # ï¿½ï¿½È¡ï¿½ï¿½Æµï¿½ï¿½ï¿½ï¿½
     videos = pd.read_csv('videos.csv')
-    viewed_by = videos['viewed_by'].apply(eval).tolist()  # ½«×Ö·û´®×ª»»ÎªÁÐ±í
-    liked_by = videos['liked_by'].apply(eval).tolist()  # ½«×Ö·û´®×ª»»ÎªÁÐ±í
+    viewed_by = videos['viewed_by'].apply(eval).tolist()  # ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½×ªï¿½ï¿½Îªï¿½Ð±ï¿½
+    liked_by = videos['liked_by'].apply(eval).tolist()  # ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½×ªï¿½ï¿½Îªï¿½Ð±ï¿½
     
-    # Éú³É²Ù×÷¼ÇÂ¼
+    # ï¿½ï¿½ï¿½É²ï¿½ï¿½ï¿½ï¿½ï¿½Â¼
     operations = []
     for user_id in users['id']:
         num_ops = random.randint(min_ops, max_ops)
@@ -56,17 +56,17 @@ def generate_users_operations():
             video_id = random.randint(1, num_videos)
             video_idx = video_id - 1
             
-            # ¸üÐÂä¯ÀÀºÍµãÔÞ
+            # ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Íµï¿½ï¿½ï¿½
             views[video_idx] += 1
-            if random.random() < 0.3:  # 30%¸ÅÂÊµãÔÞ
+            if random.random() < 0.3:  # 30%ï¿½ï¿½ï¿½Êµï¿½ï¿½ï¿½
                 likes[video_idx] += 1
                 liked = 1
-                # ¼ÇÂ¼µãÔÞÓÃ»§ºÍÈÕÆÚ
+                # ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 liked_by[video_idx].append((user_id, day))
             else:
                 liked = 0
             
-            # ¼ÇÂ¼²Ù×÷£¨Ìí¼Óday×Ö¶Î£©
+            # ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½dayï¿½Ö¶Î£ï¿½
             operations.append({
                 'user_id': user_id,
                 'video_id': video_id,
@@ -74,19 +74,18 @@ def generate_users_operations():
                 'day': day
             })
             
-            # ¼ÇÂ¼¹Û¿´ÓÃ»§ºÍÈÕÆÚ
+            # ï¿½ï¿½Â¼ï¿½Û¿ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             viewed_by[video_idx].append((user_id, day))
     
-    # ±£´æÓÃ»§ÐÅÏ¢
-    users.to_csv('users.csv', index=False)
+    # ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½Ï¢
+    users.to_csv('data/users.csv', index=False)
     
-    # ±£´æ²Ù×÷¼ÇÂ¼
-    pd.DataFrame(operations).to_csv('operations.csv', index=False)
+    # ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼
+    pd.DataFrame(operations).to_csv('data/operations.csv', index=False)
     
-    # ¸üÐÂÊÓÆµÍ³¼ÆÐÅÏ¢²¢±£´æ
+    # ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÆµÍ³ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     videos['views'] = views
     videos['likes'] = likes
     videos['viewed_by'] = viewed_by
     videos['liked_by'] = liked_by
-    videos.to_csv('videos.csv', index=False)
-
+    videos.to_csv('data/videos.csv', index=False)

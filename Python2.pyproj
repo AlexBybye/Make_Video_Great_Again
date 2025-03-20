@@ -26,6 +26,7 @@
     <Compile Include="main.py" />
     <Compile Include="task1_similar_users.py" />
     <Compile Include="task2_recommend_videos.py" />
+    <Compile Include="ui.py" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

@@ -5,8 +5,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 def find_similar_users(target_user_id):
     #"""任务1：查找相似用户群体"""
     # 加载数据
-    videos_df = pd.read_csv('videos.csv')
-    operations_df = pd.read_csv('operations.csv')
+    videos_df = pd.read_csv('data/videos.csv')
+    operations_df = pd.read_csv('data/operations.csv')
 
     # 合并操作记录与视频标签
     operations_with_tag = operations_df.merge(

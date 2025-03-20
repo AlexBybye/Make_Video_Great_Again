@@ -22,5 +22,5 @@ def generate_videos():
         'viewed_by': viewed_by,  # 记录每条视频在哪天被哪些用户观看
         'liked_by': liked_by  # 记录每条视频在哪天被哪些用户点赞
     })
-    df.to_csv('videos.csv', index=False)
+    df.to_csv('data/videos.csv', index=False)
 
