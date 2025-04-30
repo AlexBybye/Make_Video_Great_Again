@@ -4,13 +4,13 @@ import random
 import numpy as np
 from generate_videos import generate_videos
 
-def generate_day_weights():
+def generate_day_weights(force=False):
     # ���������Ȩ�أ�ÿ��Ȩ�ز�����0.1�Ҳ�����0.4
     weights = np.random.uniform(0.1, 0.4, 7)
     weights /= weights.sum()  # ��һ��ȷ���ܺ�Ϊ1
     return weights
 
-def generate_days(num_ops):
+def generate_days(num_ops,force=False):
     # ����������ɵ�Ȩ�ط�������
     weights = generate_day_weights()
     
@@ -22,7 +22,7 @@ def generate_days(num_ops):
     
     return days.tolist()
 
-def generate_users_operations():
+def generate_users_operations(force=False):
     # ���ò���
     num_users = 10_000
     num_videos = 100_000
@@ -42,7 +42,7 @@ def generate_users_operations():
     likes = np.zeros(num_videos, dtype=int)
     
     # ��ȡ��Ƶ����
-    videos = pd.read_csv('videos.csv')
+    videos = pd.read_csv('data/videos.csv')  # 原路径为'videos.csv'
     viewed_by = videos['viewed_by'].apply(eval).tolist()  # ���ַ���ת��Ϊ�б�
     liked_by = videos['liked_by'].apply(eval).tolist()  # ���ַ���ת��Ϊ�б�
     
@@ -78,14 +78,14 @@ def generate_users_operations():
             viewed_by[video_idx].append((user_id, day))
     
     # �����û���Ϣ
-    users.to_csv('data/users.csv', index=False)
+    users.to_csv('data/users.csv', index=False, mode='w')
     
     # ���������¼
-    pd.DataFrame(operations).to_csv('data/operations.csv', index=False)
+    pd.DataFrame(operations).to_csv('data/operations.csv', index=False, mode='w')
     
     # ������Ƶͳ����Ϣ������
     videos['views'] = views
     videos['likes'] = likes
     videos['viewed_by'] = viewed_by
     videos['liked_by'] = liked_by
-    videos.to_csv('data/videos.csv', index=False)
+    videos.to_csv('data/videos.csv', index=False, mode='w')

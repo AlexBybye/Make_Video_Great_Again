@@ -1,83 +1,30 @@
-# -*- coding: utf-8 -*-
-# import generate_videos
-# import generate_users_operations
-# import task1_similar_users
-# import task2_recommend_videos
-# import pandas as pd
 
-# def main():
-#     # 1. Éú³É»ù´¡Êı¾İ
-#     generate_videos.generate_videos()
-#     generate_users_operations.generate_users_operations()
-
-#     # 2. ¼ÓÔØÓÃ»§ÁĞ±íÓÃÓÚÑéÖ¤
-#     operations_df = pd.read_csv('operations.csv')
-#     existing_user_ids = operations_df['user_id'].unique()
-#     while 1:
-#       choose_functions=input(u"\nPlease choose a function(enter q to exit):").strip()
-#       if choose_functions =='1':
-#     # 3. Ñ­»·ÊäÈëÓÃ»§ID
-#         user_input = input(u"\nPlease enter the user ID (enter q to exit): ").strip()
-#         if user_input.lower() == 'q':
-#             break
-
-#         # ÑéÖ¤ÊäÈëÊÇ·ñÎªÕûÊı
-#         try:
-#             user_id = int(user_input)
-#         except ValueError:
-#             print(u"Error: Enter a number or q to exit.")
-#             continue
-
-#         # ÑéÖ¤ÓÃ»§ÊÇ·ñ´æÔÚ
-#         if user_id not in existing_user_ids:
-#             print(u"Error: User ID does not exist.")
-#             continue
-
-#         # Ö´ĞĞÈÎÎñ1
-#         similar_users = task1_similar_users.find_similar_users(user_id)
-#         print(u"\ntask1:Similar_user_groups")
-#         print(u"user_ID | similarity")
-#         for user in similar_users:
-#             print(u"{0} | {1:.4f}".format(user[u'user_ID'], user[u'similarity']))
-#         continue
-
-#       if choose_functions =='2':
-      
-#         user_input = input(u"\nPlease enter the user ID (enter q to exit): ").strip()
-#         if user_input.lower() == 'q':
-#             break
-
-#         # ÑéÖ¤ÊäÈëÊÇ·ñÎªÕûÊı
-#         try:
-#             user_id = int(user_input)
-#         except ValueError:
-#             print(u"Error: Enter a number or q to exit.")
-#             continue
-
-#         # ÑéÖ¤ÓÃ»§ÊÇ·ñ´æÔÚ
-#         if user_id not in existing_user_ids:
-#             print(u"Error: User ID does not exist.")
-#             continue
-        
-#         # Ö´ĞĞÈÎÎñ2
-#         recommendations = task2_recommend_videos.recommend_videos(user_id)
-#         print(u"\ntask2:Featured_Video")
-#         print(u"Video_ID | label | Overall_rating")
-#         for video in recommendations:
-#             print(u"{0} | {1} | {2:.2f}".format(video[u'Video_ID'], video[u'label'], video[u'Overall_rating']))
-#         continue
-#       if choose_functions =='q':
-#           break
-#       else:
-#           print(u"Error: choose a function or q to exit.")
-#           continue
-
+# from ui import run_app
+#
 # if __name__ == '__main__':
-#     main()
+#     run_app()
 
+# main.py - ç¨‹åºå…¥å£æ–‡ä»¶
+import sys
+import os
+from PyQt6.QtWidgets import QApplication
+from data_manager import DataManager
+from ui import LoadingSplash, MainWindow
 
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
 
-from ui import run_app
+    # ç¡®ä¿ç›®å½•å­˜åœ¨
+    os.makedirs("data", exist_ok=True)
+    os.makedirs("results", exist_ok=True)
 
-if __name__ == '__main__':
-    run_app()
+    # æ˜¾ç¤ºåŠ è½½ç•Œé¢
+    splash = LoadingSplash()
+    DataManager()  # åˆå§‹åŒ–æ•°æ®
+    splash.close()
+
+    # æ˜¾ç¤ºä¸»ç•Œé¢
+    window = MainWindow()
+    window.show()
+
+    sys.exit(app.exec())

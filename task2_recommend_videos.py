@@ -3,15 +3,15 @@ from sklearn.metrics.pairwise import cosine_similarity
 import pandas as pd
 
 def recommend_videos(target_user_id):
-    #"""ÈÎÎñ2£ºÍÆ¼öÏà¹ØÊÓÆµ"""
-    # ¼ÓÔØÊý¾Ý
-    videos_df = pd.read_csv('videos.csv')
-    operations_df = pd.read_csv('operations.csv')
+    #"""ï¿½ï¿½ï¿½ï¿½2ï¿½ï¿½ï¿½Æ¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æµ"""
+    # ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    videos_df = pd.read_csv('data/videos.csv')  # åŽŸè·¯å¾„ä¸º'videos.csv'
+    operations_df = pd.read_csv('data/operations.csv')  # åŽŸè·¯å¾„ä¸º'operations.csv'
 
-    # »ñÈ¡ÓÃ»§ÒÑ¹Û¿´µÄÊÓÆµ
+    # ï¿½ï¿½È¡ï¿½Ã»ï¿½ï¿½Ñ¹Û¿ï¿½ï¿½ï¿½ï¿½ï¿½Æµ
     user_viewed_videos = operations_df[operations_df['user_id'] == target_user_id]['video_id'].unique()
 
-    # ¹¹½¨ÓÃ»§-±êÇ©¾ØÕó£¨¸´ÓÃÈÎÎñ1µÄ´úÂëÂß¼­£©
+    # ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½-ï¿½ï¿½Ç©ï¿½ï¿½ï¿½ó£¨¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½1ï¿½Ä´ï¿½ï¿½ï¿½ï¿½ß¼ï¿½ï¿½ï¿½
     operations_with_tag = operations_df.merge(
         videos_df[['id', 'tag']], 
         left_on='video_id', 
@@ -27,17 +27,17 @@ def recommend_videos(target_user_id):
         values='score'
     ).fillna(0)
 
-    # ¼ÆËãÓàÏÒÏàËÆ¶È»ñÈ¡ÏàËÆÓÃ»§£¨Ç°50¸ö£©
+    # ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶È»ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½Ç°50ï¿½ï¿½ï¿½ï¿½
     user_vector = user_tag_matrix.loc[[target_user_id]].values
     similarities = cosine_similarity(user_vector, user_tag_matrix.values)
     similarities_series = pd.Series(similarities[0], index=user_tag_matrix.index)
     similar_users = similarities_series.sort_values(ascending=False).iloc[1:51].index.tolist()
 
-    # É¸Ñ¡ºòÑ¡ÊÓÆµ
+    # É¸Ñ¡ï¿½ï¿½Ñ¡ï¿½ï¿½Æµ
     similar_users_ops = operations_df[operations_df['user_id'].isin(similar_users)]
     candidate_videos = similar_users_ops[~similar_users_ops['video_id'].isin(user_viewed_videos)]['video_id']
 
-    # Í³¼ÆÊÓÆµÈÈ¶ÈºÍ±êÇ©Æ¥Åä¶È
+    # Í³ï¿½ï¿½ï¿½ï¿½Æµï¿½È¶ÈºÍ±ï¿½Ç©Æ¥ï¿½ï¿½ï¿½
     video_heat = candidate_videos.value_counts().reset_index(name='count')
     recommend_df = pd.merge(video_heat, videos_df[['id', 'tag']], left_on='video_id', right_on='id', how='left')
     recommend_df['tag_score'] = recommend_df['tag'].map(
@@ -45,7 +45,7 @@ def recommend_videos(target_user_id):
     )
     recommend_df['combined_score'] = recommend_df['count'] * recommend_df['tag_score']
 
-    # ·µ»Ø½á¹û£¨¸ñÊ½£º×ÖµäÁÐ±í£©
+    # ï¿½ï¿½ï¿½Ø½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½ï¿½ï¿½ï¿½Öµï¿½ï¿½Ð±ï¿½
     top_recommendations = recommend_df.sort_values('combined_score', ascending=False).head(10)
     result = [
         {u"Video_ID": row['video_id'], u"label": row['tag'], u"Overall_rating": round(row['combined_score'], 2)}
