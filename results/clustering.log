@@ -1,0 +1,50 @@
+ERROR:root:æ€¿‡ ß∞‹: 'id'
+Traceback (most recent call last):
+  File "D:\Users\70269\Downloads\Python2(1)\task5_video_clustering.py", line 104, in cluster_videos
+    result_df = result_df.merge(cluster_mapping, on='id', how='left')
+  File "D:\python\Lib\site-packages\pandas\core\frame.py", line 10832, in merge
+    return merge(
+        self,
+    ...<11 lines>...
+        validate=validate,
+    )
+  File "D:\python\Lib\site-packages\pandas\core\reshape\merge.py", line 170, in merge
+    op = _MergeOperation(
+        left_df,
+    ...<10 lines>...
+        validate=validate,
+    )
+  File "D:\python\Lib\site-packages\pandas\core\reshape\merge.py", line 794, in __init__
+    ) = self._get_merge_keys()
+        ~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\python\Lib\site-packages\pandas\core\reshape\merge.py", line 1297, in _get_merge_keys
+    right_keys.append(right._get_label_or_level_values(rk))
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^
+  File "D:\python\Lib\site-packages\pandas\core\generic.py", line 1911, in _get_label_or_level_values
+    raise KeyError(key)
+KeyError: 'id'
+ERROR:root:æ€¿‡ ß∞‹: 'id'
+Traceback (most recent call last):
+  File "D:\Users\70269\Downloads\Python2(1)\task5_video_clustering.py", line 104, in cluster_videos
+    result_df = result_df.merge(cluster_mapping, on='id', how='left')
+  File "D:\python\Lib\site-packages\pandas\core\frame.py", line 10832, in merge
+    return merge(
+        self,
+    ...<11 lines>...
+        validate=validate,
+    )
+  File "D:\python\Lib\site-packages\pandas\core\reshape\merge.py", line 170, in merge
+    op = _MergeOperation(
+        left_df,
+    ...<10 lines>...
+        validate=validate,
+    )
+  File "D:\python\Lib\site-packages\pandas\core\reshape\merge.py", line 794, in __init__
+    ) = self._get_merge_keys()
+        ~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\python\Lib\site-packages\pandas\core\reshape\merge.py", line 1297, in _get_merge_keys
+    right_keys.append(right._get_label_or_level_values(rk))
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^
+  File "D:\python\Lib\site-packages\pandas\core\generic.py", line 1911, in _get_label_or_level_values
+    raise KeyError(key)
+KeyError: 'id'
