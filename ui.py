@@ -36,7 +36,7 @@ class LoadingSplash(QSplashScreen):
         self.setStyleSheet("background: transparent;")
 
         # 添加进度标签
-        self.progress_label = QLabel("ciallo！正在生成数据哦，小杂鱼~", self)
+        self.progress_label = QLabel("ciallo！正在生成数据哦~", self)
         self.progress_label.setGeometry(QRect(0, 450, 500, 30))
         self.progress_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.progress_label.setStyleSheet("""
