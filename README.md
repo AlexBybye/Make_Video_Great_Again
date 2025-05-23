@@ -96,7 +96,7 @@ Make_Video_Great_Again/
 ├── resources/          # 静态资源与配置文件
 ├── ui.py               # 用户界面模块
 │  
-├── core/              # 核心功能模块
+├──# 核心功能模块
 │   ├── data_manager.py    # 数据管理
 │   ├── data_cache.py      # 缓存系统
 │   └── models/            # 机器学习模型(后续)
@@ -106,6 +106,7 @@ Make_Video_Great_Again/
 │   ├── task3_predict_heat.py
 │   ├── task4_user_clustering.py
 │   └── task5_video_clustering.py
+├── test_performance.py               # 耗时计算模块
 └── main.py            # 应用入口
 ```
 
