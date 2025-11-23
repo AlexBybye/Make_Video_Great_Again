@@ -53,7 +53,7 @@ def generate_videos(force: bool = False) -> None:
         
         # 视频标签列表
         tags = ['movie', 'music', 'game', 'life', 'tech', 'fashion', 'sports', 'food', 'education', 'travel']
-        num_videos = 500000
+        num_videos = 100000
         
         # 使用列表推导式优化性能
         video_tags = [random.choice(tags) for _ in range(num_videos)]

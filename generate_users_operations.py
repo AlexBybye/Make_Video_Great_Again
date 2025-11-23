@@ -97,9 +97,9 @@ def generate_users_operations(force: bool = False) -> None:
         logging.info("开始生成新的用户和操作数据")
         
         # 设置参数
-        num_users = 50000
-        num_videos = 500000
-        min_ops, max_ops = 800, 1200
+        num_users = 10000
+        num_videos = 100000
+        min_ops, max_ops = 75, 125
         
         # 生成用户年龄（使用NumPy优化性能）
         ages = np.random.normal(loc=35, scale=10, size=num_users)
