@@ -96,7 +96,7 @@ Make_Video_Great_Again/
 ├── resources/          # 静态资源与配置文件
 ├── ui.py               # 用户界面模块
 │  
-├── core/              # 核心功能模块
+├──# 核心功能模块
 │   ├── data_manager.py    # 数据管理
 │   ├── data_cache.py      # 缓存系统
 │   └── models/            # 机器学习模型(后续)
@@ -106,6 +106,7 @@ Make_Video_Great_Again/
 │   ├── task3_predict_heat.py
 │   ├── task4_user_clustering.py
 │   └── task5_video_clustering.py
+├── test_performance.py               # 耗时计算模块
 └── main.py            # 应用入口
 ```
 
@@ -160,10 +161,23 @@ AlexBybye BUSYING-1 happytzh
 - 项目主页：[GitHub](https://github.com/AlexBybye/Make_Video_Great_Again)
 
 
-## 🌟 致谢
-
-感谢所有为本项目做出贡献的开发者！
-
+## 🌟 暴力测试（亿级数据：`50000users - 500000videos - 800-1200operations`）
+- cpu: `i9-13900`
+- 内存：`2048MB`  
+- 测试结果：
+```
+| 步骤           | 耗时（秒）|
+| -----------    | -------- |
+| 生成数据        | 340.8385 |
+| 加载数据        | 359.1548 |
+| Task1 预模拟    | 7.3957   |
+| Task1 模拟1     | 0.1570   |
+| Task2 模拟      | 1.0478   |
+| Task1 模拟2     | 0.1492   |
+| Task3 模拟      | 10.0709  |
+| Task4 模拟      | 20.7974  |
+| Task5 模拟      | 14.4364  |
+```
 ---
 
 <div align="center">
