@@ -17,18 +17,19 @@ Make Video Great Again 是一个基于人工智能的视频数据分析与推荐
 
 - 🎯 **智能推荐引擎**
   - 基于协同过滤的个性化推荐
-  - 深度学习模型支持
+  - 深度学习模型支持(可以随时接入)
   - 实时推荐更新
-
+  
 - 📊 **高级数据分析**
   - 用户行为模式识别
   - 视频热度趋势预测
   - 多维度数据可视化
-
+  
 - 🔍 **智能聚类分析**
   - 用户群体智能划分
   - 视频内容自动分类
   - 特征工程优化
+  - 聚类结果再度优化推荐
 
 - 🎨 **现代化界面**
   - 响应式设计
@@ -91,7 +92,7 @@ python main.py
 
 ```
 Make_Video_Great_Again/
-├── data/               # 数据存储与预处理
+├── data/               # 数据存储与预处理（介于大小未储存云端）
 ├── results/            # 分析结果与可视化输出
 ├── resources/          # 静态资源与配置文件
 ├── ui.py               # 用户界面模块
@@ -106,6 +107,13 @@ Make_Video_Great_Again/
 │   ├── task3_predict_heat.py
 │   ├── task4_user_clustering.py
 │   └── task5_video_clustering.py
+├──# 爬虫模块（B站数据）
+│   ├── capture_users_operation.py
+│   └── capture_videos.py        
+├──# 新增聚类强化学习推荐模块
+│   ├── Alpha_embedding_Cluster.py
+│   ├── Beta_Thompson_Sampling.py
+│   └── Charlie_LinUCB.py
 ├── test_performance.py               # 耗时计算模块
 └── main.py            # 应用入口
 ```
@@ -154,8 +162,8 @@ Make_Video_Great_Again/
 - **项目负责人**: AlexBybye
 - **核心开发者**: 
 AlexBybye BUSYING-1 happytzh
-- **UI/UX 设计**: BUSYING-1
-
+- **UI/UX 设计**: BUSYING-1 AlexBybye
+- **强化学习等深度设计**: AlexBybye
 ## 📞 联系我们
 
 - 项目主页：[GitHub](https://github.com/AlexBybye/Make_Video_Great_Again)
