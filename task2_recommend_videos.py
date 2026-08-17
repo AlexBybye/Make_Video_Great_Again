@@ -1,107 +1,109 @@
 # -*- coding: utf-8 -*-
+# task2_recommend_videos.py — 视频推荐 + 推荐路径解释
+# 数据结构: HashMap + Graph (BFS 路径回溯) + MaxHeap (Top-K)
+
 import time
-import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
-import pandas as pd
-from data_cache import DataCache
 import logging
-from scipy.sparse import csr_matrix
-from task1_similar_users import find_similar_users, initialize_matrix
-from functools import lru_cache
+import numpy as np
+from ds.data_store import DataStore
+from ds.max_heap import MaxHeap
 
-@lru_cache(maxsize=1)
-def get_video_data():
-    """缓存视频数据"""
-    return DataCache.load_videos()
+TOP_K_SIMILAR = 20
 
-def recommend_videos(target_user_id):
-    """任务2：推荐相关视频"""
-    try:
-        t1 = time.time()
-        # 使用缓存数据
-        videos_df = get_video_data()
-        operations_df = DataCache.load_operations()
-        
-        # 验证用户ID是否存在
-        if target_user_id not in operations_df['user_id'].unique():
-            raise ValueError(f"用户ID {target_user_id} 不存在")
-            
-        logging.info(f"开始处理用户 {target_user_id} 的视频推荐")
 
-        # 获取用户已观看的视频（使用集合操作）
-        user_viewed_videos = set(operations_df[operations_df['user_id'] == target_user_id]['video_id'])
-        logging.info(f"用户已观看视频数: {len(user_viewed_videos)}")
+def recommend_videos(target_user_id, use_enhanced=False):
+    """基于 Graph BFS + MaxHeap Top-K 的协同过滤推荐, 含路径解释, 可选 TS/LinUCB 增强"""
 
-        # 获取相似用户（复用task1的结果和矩阵）
-        similar_users_result = find_similar_users(target_user_id)
-        similar_users = [item["user_ID"] for item in similar_users_result]
-        
-        # 获取更多相似用户（使用numpy操作优化）
-        all_users = np.array(list(operations_df['user_id'].unique()))
-        mask = ~np.isin(all_users, similar_users)
-        additional_users = all_users[mask][:45]
-        similar_users.extend(additional_users)
+    t1 = time.time()
+    store = DataStore()
 
-        # 使用向量化操作获取候选视频
-        similar_users_ops = operations_df[operations_df['user_id'].isin(similar_users)]
-        candidate_videos = set(similar_users_ops['video_id']) - user_viewed_videos
+    if not store.user_exists(target_user_id):
+        raise ValueError(f"用户ID {target_user_id} 不存在")
 
-        if len(candidate_videos) == 0:
-            raise ValueError("没有找到合适的推荐视频")
+    mode_str = "增强模式" if use_enhanced else "标准模式"
+    logging.info(f"[Task2] 使用 Graph + MaxHeap 为用户 {target_user_id} 生成推荐 ({mode_str})")
 
-        # 预处理视频数据
-        video_data = []
-        video_ids = list(candidate_videos)
-        
-        # 使用 DataFrame 操作代替循环
-        video_ops_df = similar_users_ops[similar_users_ops['video_id'].isin(candidate_videos)]
-        video_stats = video_ops_df.groupby('video_id').agg({
-            'user_id': ['count', lambda x: set(x)],
-            'liked': 'mean'
-        }).reset_index()
-        
-        # 计算特征（向量化操作）
-        top_similar_users = set(similar_users[:5])
-        video_stats['user_overlap'] = video_stats[('user_id', '<lambda_0>')].apply(
-            lambda x: len(x & top_similar_users) / 5
-        )
-        
-        # 构建特征矩阵
-        features = np.array([
-            video_stats[('user_id', 'count')].values,  # 观看次数
-            video_stats['liked']['mean'].values,       # 点赞率
-            video_stats['user_overlap'].values         # 用户重叠度
-        ]).T
-        
-        # 标准化特征
-        features = (features - features.mean(axis=0)) / (features.std(axis=0) + 1e-8)
-        
-        # 计算综合得分
-        base_scores = video_stats[('user_id', 'count')].values * \
-                     (1 + video_stats['liked']['mean'].values) * \
-                     (1 + video_stats['user_overlap'].values)
-        final_scores = base_scores * (1 + features[:, 2])  # 增加用户重叠度权重
-        
-        # 获取前10个推荐
-        top_indices = np.argpartition(final_scores, -10)[-10:]
-        top_indices = top_indices[np.argsort(final_scores[top_indices])][::-1]
-        
-        # 构建结果
-        result = []
-        for idx in top_indices:
-            video_id = video_stats['video_id'].iloc[idx]
-            video_tag = videos_df[videos_df['id'] == video_id]['tag'].iloc[0]
-            result.append({
-                "Video_ID": int(video_id),
-                "label": video_tag,
-                "Overall_rating": round(float(final_scores[idx]), 2)
-            })
+    # 1. HashMap O(1) 获取已观看视频
+    user_viewed_videos = store.get_user_viewed_videos(target_user_id)
 
-        logging.info(f"成功为用户 {target_user_id} 生成 {len(result)} 个视频推荐")
-        t2 = time.time()
-        print(f"task2模拟耗时: {t2 - t1:.4f} 秒")
-        return result
+    # 2. Graph BFS: 距离=2 的相似用户
+    similar_users = store.get_similar_users_bfs(target_user_id, max_depth=2)
 
-    except Exception as e:
-        logging.error(f"生成视频推荐失败: {str(e)}")
-        raise
+    if not similar_users:
+        raise ValueError("没有找到相似用户，无法推荐")
+
+    # 3. HashMap 聚合候选视频分数
+    candidate_scores = {}
+    for other_uid, sim in similar_users.items():
+        ops = store.get_user_operations(other_uid)
+        for op in ops:
+            vid = op['video_id']
+            if vid in user_viewed_videos:
+                continue
+            weight = sim * (2.0 if op['liked'] == 1 else 1.0)
+            candidate_scores[vid] = candidate_scores.get(vid, 0) + weight
+
+    if not candidate_scores:
+        raise ValueError("没有找到合适的推荐视频")
+
+    # 4. 增强模式: 应用 TS + LinUCB 动态权重
+    ts_boosts = {}
+    linucb_boosts = {}
+    if use_enhanced:
+        try:
+            from ds.bandit_store import BanditStore
+            bs = BanditStore()
+            bs.ensure_init()
+            for vid in candidate_scores:
+                base = candidate_scores[vid]
+                # TS 探索加成 (新簇视频获得更高加成)
+                ts_score = bs.get_ts_score(vid)
+                if ts_score is not None:
+                    ts_boost = 1.0 + ts_score  # TS 分数越高, 加成越大
+                    ts_boosts[vid] = f"+{ts_score:.2f}"
+                else:
+                    ts_boost = 1.0
+                    ts_boosts[vid] = "N/A"
+
+                # LinUCB 动态权重
+                lw = bs.get_linucb_weight(target_user_id, vid)
+                linucb_boost = 1.0 + np.tanh(lw)  # tanh 映射到 (0,2)
+                linucb_boosts[vid] = f"+{np.tanh(lw):.2f}"
+
+                candidate_scores[vid] = base * ts_boost * linucb_boost
+        except Exception as e:
+            logging.warning(f"[Task2] 增强模式初始化失败: {e}")
+
+    # 5. MaxHeap 提取 Top-10
+    heap = MaxHeap()
+    for vid, score in candidate_scores.items():
+        heap.push(score, vid)
+
+    top_10 = heap.top_k(10)
+
+    # 6. 构建结果
+    result = []
+    for score, vid in top_10:
+        v = store.get_video(vid)
+        tag = v['tag'] if v else '未知'
+
+        explanation = store.explain_recommendation(target_user_id, int(vid))
+        if explanation:
+            reason = (f"你观看过「{explanation['shared_tag']}」类视频(#{explanation['shared_video']}), "
+                      f"兴趣相似用户#{explanation['similar_user']} 也观看了该视频")
+        else:
+            reason = "基于协同过滤算法推荐"
+
+        result.append({
+            "Video_ID": int(vid),
+            "label": tag,
+            "Overall_rating": round(float(score), 2),
+            "reason": reason,
+            "enhanced": use_enhanced,
+            "ts_boost": ts_boosts.get(vid, ""),
+            "linucb_boost": linucb_boosts.get(vid, "")
+        })
+
+    t2 = time.time()
+    print(f"task2耗时 ({mode_str}): {t2 - t1:.4f} 秒")
+    return result

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head><meta charset="UTF-8"><title>功能测试</title></head>
+<body style="background:#111;color:#fff;padding:40px;font-family:sans-serif">
+  <h2>功能快速测试</h2>
+  <p>输入用户ID，点按钮看API响应：</p>
+  <input type="text" id="uid" placeholder="用户ID" value="1" style="padding:8px;width:150px">
+  <button onclick="doTest()" style="padding:8px 20px;cursor:pointer">测试相似用户分析</button>
+  <pre id="out" style="margin-top:20px;padding:16px;background:#1a1a2e;border-radius:8px;min-height:100px"></pre>
+
+  <script>
+  async function doTest() {
+    const out = document.getElementById('out');
+    const uid = document.getElementById('uid').value.trim();
+    if (!uid) { out.textContent = '请输入用户ID'; return; }
+    out.textContent = '请求中...';
+    try {
+      const res = await fetch('/api/task1/similar-users', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({user_id: parseInt(uid)})
+      });
+      const data = await res.json();
+      out.textContent = JSON.stringify(data, null, 2);
+    } catch(e) {
+      out.textContent = '错误: ' + e.message;
+    }
+  }
+  </script>
+</body>
+</html>

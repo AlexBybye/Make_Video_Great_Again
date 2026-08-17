@@ -1,141 +1,194 @@
 # -*- coding: utf-8 -*-
+# task5_video_clustering.py — 视频聚类分析
+# 使用自建 HashMap + CSRSparseMatrix, 采样后再转 dense 避免 OOM
+# 数据结构: HashMap + CSRSparseMatrix (dok→csr)
+
 import time
-import pandas as pd
 import numpy as np
-from scipy.sparse import csr_matrix
 from sklearn.cluster import MiniBatchKMeans
-from sklearn.decomposition import TruncatedSVD
+from sklearn.decomposition import TruncatedSVD, PCA
+from sklearn.preprocessing import normalize
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import os
 import logging
-from sklearn.preprocessing import normalize
+from ds.data_store import DataStore
+from ds.sparse_matrix import CSRSparseMatrix
 
-# from PyQt6.QtGui import QPixmap # 在非GUI环境下不需要导入
-
-# 配置日志
 logging.basicConfig(filename='results/clustering.log', level=logging.INFO)
+
+plt.rcParams.update({
+    'font.sans-serif': ['Microsoft YaHei', 'SimHei', 'PingFang SC', 'Heiti TC', 'STHeiti', 'Arial Unicode MS'],
+    'axes.unicode_minus': False,
+    'figure.facecolor': '#0D0D1A',
+    'axes.facecolor': '#0D0D1A',
+    'axes.edgecolor': '#333355',
+    'axes.labelcolor': '#AAAACC',
+    'text.color': '#DDDDEE',
+    'xtick.color': '#8888AA',
+    'ytick.color': '#8888AA',
+    'grid.color': '#1E1E3A',
+    'grid.alpha': 0.4,
+})
 
 
 def plot_clusters(labels, reduced_data, n_clusters):
-    """绘制聚类结果图"""
-    plt.figure(figsize=(10, 8))
-    plt.rcParams['font.sans-serif'] = ['SimHei']  # 使用黑体
-    plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
+    fig, ax = plt.subplots(figsize=(11, 8))
+    fig.patch.set_facecolor('#0D0D1A')
+    ax.set_facecolor('#0D0D1A')
 
-    # 绘制散点图
-    scatter = plt.scatter(reduced_data[:, 0], reduced_data[:, 1],
-                          c=labels, cmap='viridis',
-                          alpha=0.7, s=20, edgecolor='k', linewidth=0.3)
+    scatter = ax.scatter(reduced_data[:, 0], reduced_data[:, 1],
+                          c=labels, cmap='cividis', alpha=0.8, s=14,
+                          edgecolor='none')
 
-    # 标记聚类中心（只对用于聚类的 reduced_data 计算中心）
-    # centers = np.array([reduced_data[labels == i].mean(axis=0) for i in range(n_clusters)])
-    # plt.scatter(centers[:, 0], centers[:, 1],
-    #             c='red', s=200, alpha=0.9, marker='X', edgecolor='k')
+    for i in range(n_clusters):
+        mask = labels == i
+        if mask.sum() > 0:
+            cx, cy = reduced_data[mask, 0].mean(), reduced_data[mask, 1].mean()
+            ax.scatter(cx, cy, c='#FFFFFF', s=80, marker='X', edgecolor='#FB7299',
+                       linewidth=1.2, zorder=5)
+            ax.annotate(f'{i}', (cx, cy), color='#FFFFFF', fontsize=9, fontweight='bold',
+                        ha='center', va='bottom', xytext=(0, 8), textcoords='offset points')
 
-    # 添加标签和标题
-    plt.title(f'视频聚类结果 (k={n_clusters})')
-    plt.xlabel('SVD 主成分 1')
-    plt.ylabel('SVD 主成分 2')
-    plt.colorbar(scatter, label='聚类')
-    plt.grid(True, alpha=0.2)
+    ax.set_title(f'视频内容聚类分布 (k={n_clusters})', fontsize=15,
+                 fontweight='bold', color='#FFFFFF', pad=14)
+    ax.set_xlabel('主成分 1', fontsize=12, color='#AAAACC')
+    ax.set_ylabel('主成分 2', fontsize=12, color='#AAAACC')
+    ax.tick_params(colors='#8888AA', labelsize=9)
+    ax.grid(True, alpha=0.25, linewidth=0.4)
 
-    # 保存图像
+    cbar = fig.colorbar(scatter, ax=ax, label='聚类标签')
+    cbar.ax.yaxis.label.set_color('#AAAACC')
+    cbar.ax.tick_params(colors='#8888AA')
+    cbar.outline.set_edgecolor('#333355')
+
+    fig.tight_layout()
     plot_path = 'results/video_clusters.png'
-    plt.savefig(plot_path, dpi=300, bbox_inches='tight')
-    plt.close()
+    fig.savefig(plot_path, dpi=150, facecolor='#0D0D1A', bbox_inches='tight')
+    plt.close(fig)
     return plot_path
 
 
+def _csr_to_dense_rows(csr, row_indices, n_cols):
+    """只将 CSR 中指定的行转为 dense, 避免全量 dense 化"""
+    n_rows = len(row_indices)
+    dense = np.zeros((n_rows, n_cols), dtype=np.float32)
+    for out_i, src_i in enumerate(row_indices):
+        cols, vals = csr.get_row(src_i)
+        for c, v in zip(cols, vals):
+            dense[out_i, c] = v
+    return dense
+
+
 def cluster_videos(n_clusters=5, sample_size=5000):
-    """视频聚类分析"""
     try:
         t1 = time.time()
         os.makedirs('results', exist_ok=True)
         os.makedirs('data', exist_ok=True)
 
-        # 1. 数据加载
-        videos_df = pd.read_csv('data/videos.csv')
-        operations_df = pd.read_csv('data/operations.csv')
+        store = DataStore()
 
-        # 2. 构建交互矩阵
-        # (保持原有的用户-视频交互矩阵构建和加权逻辑不变)
-        video_ids_in_op = operations_df['video_id'].unique()
-        user_ids = operations_df['user_id'].unique()
+        # 有交互的视频和用户
+        video_ids = sorted(store.ops_by_video.keys())
+        user_ids = sorted(store.ops_by_user.keys())
 
-        video_to_idx = {video: idx for idx, video in enumerate(video_ids_in_op)}
-        user_to_idx = {user: idx for idx, user in enumerate(user_ids)}
+        video_to_idx = {vid: i for i, vid in enumerate(video_ids)}
+        user_to_idx = {uid: i for i, uid in enumerate(user_ids)}
 
-        # 行为权重分配
-        operations_df['weight'] = 1.0
-        operations_df.loc[operations_df['liked'] == 1, 'weight'] = 2.0
+        # 构建 DOK: key=(video_idx, user_idx) — 视频为行
+        dok = {}
+        for uid in user_ids:
+            ops = store.get_user_operations(uid)
+            ui = user_to_idx[uid]
+            for op in ops:
+                vid = op['video_id']
+                vi = video_to_idx.get(vid)
+                if vi is None:
+                    continue
+                weight = 2.0 if op['liked'] == 1 else 1.0
+                dok[(vi, ui)] = dok.get((vi, ui), 0) + weight
 
-        rows = operations_df['user_id'].map(user_to_idx)
-        cols = operations_df['video_id'].map(video_to_idx)
-        data = operations_df['weight'].values
+        n_videos = len(video_ids)
+        n_users = len(user_ids)
 
-        sparse_matrix = csr_matrix((data, (rows, cols)),
-                                   shape=(len(user_ids), len(video_ids_in_op)))
+        # 自建 CSR: 视频×用户 (稀疏)
+        video_user_csr = CSRSparseMatrix.from_dok(dok, n_videos, n_users)
+        logging.info(f"[Task5] CSR 交互矩阵: {video_user_csr}")
 
-        # 3. 只取有交互的视频
-        video_user_matrix = sparse_matrix.T
-        nonzero_indices = np.array(video_user_matrix.getnnz(axis=1) > 0).flatten()
-        video_user_matrix = video_user_matrix[nonzero_indices]
-        video_ids_clustered = video_ids_in_op[nonzero_indices]  # 真正用于聚类的视频ID
+        # 过滤空行 + 采样 — 全在 CSR 上操作, 不转 dense
+        nonempty_rows = []
+        for i in range(n_videos):
+            if len(video_user_csr.get_row(i)[0]) > 0:
+                nonempty_rows.append(i)
 
-        # 4. 采样部分视频加速 (仅在视频量大时使用)
-        video_matrix_for_cluster = video_user_matrix
-        video_ids_for_cluster = video_ids_clustered
+        if len(nonempty_rows) == 0:
+            raise RuntimeError("没有可用于聚类的视频")
 
-        if sample_size and video_user_matrix.shape[0] > sample_size:
-            idx = np.random.choice(video_user_matrix.shape[0], sample_size, replace=False)
-            video_matrix_for_cluster = video_user_matrix[idx]
-            video_ids_for_cluster = video_ids_clustered[idx]
+        # 采样
+        if sample_size and len(nonempty_rows) > sample_size:
+            sampled = sorted(np.random.choice(nonempty_rows, sample_size, replace=False))
+        else:
+            sampled = nonempty_rows
 
-        # 5. 归一化处理
-        video_matrix_for_cluster = normalize(video_matrix_for_cluster, norm='l2', axis=1)
+        sampled_video_ids = [video_ids[i] for i in sampled]
+        logging.info(f"[Task5] 采样 {len(sampled)} 个视频 (共 {len(nonempty_rows)} 个有效)")
 
-        # 6. 降维
-        # 注意：这里 n_components=2 只是为了可视化，实际 embedding 维度应该更高，
-        # 但我们为了保持原代码逻辑，先用 2 维聚类
-        n_components_svd = min(2, video_matrix_for_cluster.shape[1] - 1)
-        svd = TruncatedSVD(n_components=n_components_svd, random_state=42)
-        video_user_matrix_reduced = svd.fit_transform(video_matrix_for_cluster)
+        # 只把采样的行转 dense (5000 × 10000 = 50M, 可接受)
+        dense = _csr_to_dense_rows(video_user_csr, sampled, n_users)
 
-        # 7. 聚类
-        kmeans = MiniBatchKMeans(n_clusters=n_clusters,
-                                 random_state=42,
-                                 batch_size=500,
-                                 n_init=3)
-        video_labels = kmeans.fit_predict(video_user_matrix_reduced)
+        # 归一化
+        dense = normalize(dense, norm='l2', axis=1)
 
-        # 8. 结果处理：将聚类标签映射回原始 videos_df
-        cluster_mapping = pd.DataFrame({
-            'id': video_ids_for_cluster,
-            'cluster': video_labels
-        })
+        # 降维 + 聚类
+        n_comp = min(20, dense.shape[1] - 1, dense.shape[0] - 1)
+        svd = TruncatedSVD(n_components=n_comp, random_state=42)
+        reduced = svd.fit_transform(dense)
 
-        # 将聚类结果合并到原始 videos_df
-        result_df = videos_df.merge(cluster_mapping, on='id', how='left')
+        kmeans = MiniBatchKMeans(n_clusters=n_clusters, random_state=42, batch_size=500, n_init=3)
+        labels = kmeans.fit_predict(reduced)
 
-        # --- 💥 修正点 💥 ---
-        # 对于没有交互数据而没有聚类标签的视频（它们是 NaN），
-        # 填充为最后一个有效簇的 ID (n_clusters - 1)。
-        # 确保填充值在 [0, n_clusters-1] 范围内。
-        fill_cluster_id = n_clusters - 1 if n_clusters > 0 else 0
+        # 构建聚类结果
+        cluster_map = {}
+        for i, vid in enumerate(sampled_video_ids):
+            cluster_map[int(vid)] = int(labels[i])
 
-        result_df['cluster'] = result_df['cluster'].fillna(fill_cluster_id).astype(int)
-        # 9. 保存结果和可视化
+        import csv as csv_writer
+        all_videos = []
+        for vid in store.videos_map.keys():
+            v = store.videos_map.get(vid)
+            if v is None:
+                continue
+            all_videos.append({
+                'id': int(vid),
+                'tag': v.get('tag', ''),
+                'views': int(v.get('views', 0)),
+                'likes': int(v.get('likes', 0)),
+                'title': str(v.get('title', '')),
+                'cluster': cluster_map.get(int(vid), n_clusters - 1)
+            })
+
         output_path = 'data/videos_clustered.csv'
-        result_df.to_csv(output_path, index=False)
+        with open(output_path, 'w', newline='', encoding='utf-8') as f:
+            w = csv_writer.DictWriter(f, fieldnames=['id', 'tag', 'views', 'likes', 'title', 'cluster'])
+            w.writeheader()
+            w.writerows(all_videos)
         logging.info(f"视频聚类结果已保存至: {output_path}")
 
-        plot_path = plot_clusters(video_labels, video_user_matrix_reduced, n_clusters)
+        # 可视化: 2D PCA
+        pca_viz = PCA(n_components=2, random_state=42)
+        viz_data = pca_viz.fit_transform(reduced)
+        plot_path = plot_clusters(labels, viz_data, n_clusters)
 
         t2 = time.time()
-        print(f"task5模拟耗时: {t2 - t1:.4f} 秒")
+        print(f"task5耗时 (自建数据结构): {t2 - t1:.4f} 秒")
+
+        preview = [{'id': v['id'], 'tag': v['tag'], 'views': v['views'],
+                     'likes': v['likes'], 'cluster': v['cluster']}
+                   for v in all_videos[:10]]
 
         return {
-            "data": result_df[['id', 'tag', 'views', 'likes', 'cluster']].head(10).to_dict('records'),
+            "data": preview,
             "plot_path": plot_path
         }
 

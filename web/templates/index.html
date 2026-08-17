@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>视频推荐分析系统</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+  <!-- ========== 顶部导航 ========== -->
+  <nav class="top-nav">
+    <div class="nav-inner">
+      <span class="nav-brand">Just One More</span>
+      <div class="nav-tabs" id="navTabs">
+        <button class="nav-tab active" data-tab="1">相似用户分析</button>
+        <button class="nav-tab" data-tab="2">视频推荐</button>
+        <button class="nav-tab" data-tab="3">热度预测</button>
+        <button class="nav-tab" data-tab="4">用户聚类</button>
+        <button class="nav-tab" data-tab="5">视频聚类</button>
+        <button class="nav-tab" data-tab="6">算法增强</button>
+      </div>
+      <span class="nav-status" id="navStatus">🟢 就绪</span>
+      <button class="btn-crawl" id="btnCrawl" title="从B站抓取真实数据">📡 获取B站数据</button>
+    </div>
+  </nav>
+
+  <!-- ========== Hero Banner ========== -->
+  <section class="hero-banner" id="heroBanner">
+
+    <!-- ====== Aurora 动态极光背景 ====== -->
+    <div class="aurora-container">
+      <div class="aurora-blob blob-1"></div>
+      <div class="aurora-blob blob-2"></div>
+      <div class="aurora-blob blob-3"></div>
+      <div class="aurora-blob blob-4"></div>
+    </div>
+
+    <!-- ====== 数据流动线 SVG ====== -->
+    <svg class="flow-svg" viewBox="0 0 1000 600" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="gradDouyin" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#FE2C55" stop-opacity="0.6"/>
+          <stop offset="100%" stop-color="#FB7299" stop-opacity="0.1"/>
+        </linearGradient>
+        <linearGradient id="gradKuaishou" x1="100%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#FF4906" stop-opacity="0.6"/>
+          <stop offset="100%" stop-color="#FB7299" stop-opacity="0.1"/>
+        </linearGradient>
+        <linearGradient id="gradBilibili" x1="0%" y1="100%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#00A1D6" stop-opacity="0.6"/>
+          <stop offset="100%" stop-color="#FB7299" stop-opacity="0.1"/>
+        </linearGradient>
+        <linearGradient id="gradXiaohongshu" x1="100%" y1="100%" x2="0%" y2="0%">
+          <stop offset="0%" stop-color="#FF2442" stop-opacity="0.6"/>
+          <stop offset="100%" stop-color="#00A1D6" stop-opacity="0.1"/>
+        </linearGradient>
+      </defs>
+      <!-- 抖音 → 中心 -->
+      <path d="M 130,155 Q 300,190 500,300" stroke="url(#gradDouyin)" stroke-width="1.2" fill="none" class="flow-path" id="flowPath1"/>
+      <!-- 快手 → 中心 -->
+      <path d="M 870,155 Q 700,190 500,300" stroke="url(#gradKuaishou)" stroke-width="1.2" fill="none" class="flow-path" id="flowPath2"/>
+      <!-- B站 → 中心 -->
+      <path d="M 130,445 Q 300,410 500,300" stroke="url(#gradBilibili)" stroke-width="1.2" fill="none" class="flow-path" id="flowPath3"/>
+      <!-- 小红书 → 中心 -->
+      <path d="M 870,445 Q 700,410 500,300" stroke="url(#gradXiaohongshu)" stroke-width="1.2" fill="none" class="flow-path" id="flowPath4"/>
+      <!-- 流动粒子 -->
+      <circle r="3" fill="#FE2C55" class="flow-dot" id="flowDot1">
+        <animateMotion dur="3s" repeatCount="indefinite" path="M 130,155 Q 300,190 500,300"/>
+      </circle>
+      <circle r="3" fill="#FF4906" class="flow-dot" id="flowDot2">
+        <animateMotion dur="3.5s" repeatCount="indefinite" path="M 870,155 Q 700,190 500,300"/>
+      </circle>
+      <circle r="2.5" fill="#00A1D6" class="flow-dot" id="flowDot3">
+        <animateMotion dur="4s" repeatCount="indefinite" path="M 130,445 Q 300,410 500,300"/>
+      </circle>
+      <circle r="3" fill="#FF2442" class="flow-dot" id="flowDot4">
+        <animateMotion dur="3.2s" repeatCount="indefinite" path="M 870,445 Q 700,410 500,300"/>
+      </circle>
+    </svg>
+
+    <!-- ====== Orbit 轨道环 ====== -->
+    <div class="orbit-ring ring-douyin"></div>
+    <div class="orbit-ring ring-kuaishou"></div>
+    <div class="orbit-ring ring-bilibili"></div>
+    <div class="orbit-ring ring-xiaohongshu"></div>
+
+    <!-- ====== 4个平台图标 ====== -->
+    <div class="platform-icon icon-douyin" data-platform="douyin">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>
+      </svg>
+      <span class="icon-label">抖音</span>
+      <div class="icon-ripple"></div>
+    </div>
+
+    <div class="platform-icon icon-kuaishou" data-platform="kuaishou">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M18.315 12.264c2.33 0 4.218 1.88 4.218 4.2V19.8c0 2.32-1.888 4.2-4.218 4.2h-6.202a4.218 4.218 0 0 1-4.023-2.938l-3.676 1.833a2.04 2.04 0 0 1-2.731-.903 2.015 2.015 0 0 1-.216-.907v-5.94a2.03 2.03 0 0 1 2.035-2.024 2.044 2.044 0 0 1 .919.218l3.673 1.85a4.218 4.218 0 0 1 4.02-2.925zm-.062 2.162h-6.078c-1.153 0-2.09.921-2.108 2.065v3.247c0 1.148.925 2.081 2.073 2.1h6.113c1.153 0 2.09-.922 2.109-2.065v-3.247a2.104 2.104 0 0 0-2.074-2.1zM4.18 15.72a.554.554 0 0 0-.555.542v3.734a.556.556 0 0 0 .798.496l.01-.004 3.463-1.756V17.51l-3.467-1.73a.557.557 0 0 0-.249-.06zM9.28 0a5.667 5.667 0 0 1 4.98 2.965 4.921 4.921 0 0 1 3.36-1.317c2.714 0 4.913 2.177 4.913 4.863 0 2.686-2.2 4.863-4.912 4.863a4.921 4.921 0 0 1-3.996-2.034 5.651 5.651 0 0 1-4.345 2.034c-3.131 0-5.67-2.546-5.67-5.687C3.61 2.546 6.149 0 9.28 0Zm8.34 3.926c-1.441 0-2.61 1.157-2.61 2.585s1.169 2.585 2.61 2.585c1.443 0 2.612-1.157 2.612-2.585s-1.169-2.585-2.611-2.585zM9.28 2.287a3.395 3.395 0 0 0-3.39 3.4c0 1.877 1.518 3.4 3.39 3.4a3.395 3.395 0 0 0 3.39-3.4c0-1.878-1.518-3.4-3.39-3.4z"/>
+      </svg>
+      <span class="icon-label">快手</span>
+      <div class="icon-ripple"></div>
+    </div>
+
+    <div class="platform-icon icon-bilibili" data-platform="bilibili">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M17.813 4.653h.854c1.51.054 2.769.578 3.773 1.574 1.004.995 1.524 2.249 1.56 3.76v7.36c-.036 1.51-.556 2.769-1.56 3.773s-2.262 1.524-3.773 1.56H5.333c-1.51-.036-2.769-.556-3.773-1.56S.036 18.858 0 17.347v-7.36c.036-1.511.556-2.765 1.56-3.76 1.004-.996 2.262-1.52 3.773-1.574h.774l-1.174-1.12a1.234 1.234 0 0 1-.373-.906c0-.356.124-.658.373-.907l.027-.027c.267-.249.573-.373.92-.373.347 0 .653.124.92.373L9.653 4.44c.071.071.134.142.187.213h4.267a.836.836 0 0 1 .16-.213l2.853-2.747c.267-.249.573-.373.92-.373.347 0 .662.151.929.4.267.249.391.551.391.907 0 .355-.124.657-.373.906zM5.333 7.24c-.746.018-1.373.276-1.88.773-.506.498-.769 1.13-.786 1.894v7.52c.017.764.28 1.395.786 1.893.507.498 1.134.756 1.88.773h13.334c.746-.017 1.373-.275 1.88-.773.506-.498.769-1.129.786-1.893v-7.52c-.017-.765-.28-1.396-.786-1.894-.507-.497-1.134-.755-1.88-.773zM8 11.107c.373 0 .684.124.933.373.25.249.383.569.4.96v1.173c-.017.391-.15.711-.4.96-.249.25-.56.374-.933.374s-.684-.125-.933-.374c-.25-.249-.383-.569-.4-.96V12.44c0-.373.129-.689.386-.947.258-.257.574-.386.947-.386zm8 0c.373 0 .684.124.933.373.25.249.383.569.4.96v1.173c-.017.391-.15.711-.4.96-.249.25-.56.374-.933.374s-.684-.125-.933-.374c-.25-.249-.383-.569-.4-.96V12.44c.017-.391.15-.711.4-.96.249-.249.56-.373.933-.373Z"/>
+      </svg>
+      <span class="icon-label">B站</span>
+      <div class="icon-ripple"></div>
+    </div>
+
+    <div class="platform-icon icon-xiaohongshu" data-platform="xiaohongshu">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M22.405 9.879c.002.016.01.02.07.019h.725a.797.797 0 0 0 .78-.972.794.794 0 0 0-.884-.618.795.795 0 0 0-.692.794c0 .101-.002.666.001.777zm-11.509 4.808c-.203.001-1.353.004-1.685.003a2.528 2.528 0 0 1-.766-.126.025.025 0 0 0-.03.014L7.7 16.127a.025.025 0 0 0 .01.032c.111.06.336.124.495.124.66.01 1.32.002 1.981 0 .01 0 .02-.006.023-.015l.712-1.545a.025.025 0 0 0-.024-.036zM.477 9.91c-.071 0-.076.002-.076.01a.834.834 0 0 0-.01.08c-.027.397-.038.495-.234 3.06-.012.24-.034.389-.135.607-.026.057-.033.042.003.112.046.092.681 1.523.787 1.74.008.015.011.02.017.02.008 0 .033-.026.047-.044.147-.187.268-.391.371-.606.306-.635.44-1.325.486-1.706.014-.11.021-.22.03-.33l.204-2.616.022-.293c.003-.029 0-.033-.03-.034zm7.203 3.757a1.427 1.427 0 0 1-.135-.607c-.004-.084-.031-.39-.235-3.06a.443.443 0 0 0-.01-.082c-.004-.011-.052-.008-.076-.008h-1.48c-.03.001-.034.005-.03.034l.021.293c.076.982.153 1.964.233 2.946.05.4.186 1.085.487 1.706.103.215.223.419.37.606.015.018.037.051.048.049.02-.003.742-1.642.804-1.765.036-.07.03-.055.003-.112zm3.861-.913h-.872a.126.126 0 0 1-.116-.178l1.178-2.625a.025.025 0 0 0-.023-.035l-1.318-.003a.148.148 0 0 1-.135-.21l.876-1.954a.025.025 0 0 0-.023-.035h-1.56c-.01 0-.02.006-.024.015l-.926 2.068c-.085.169-.314.634-.399.938a.534.534 0 0 0-.02.191.46.46 0 0 0 .23.378.981.981 0 0 0 .46.119h.59c.041 0-.688 1.482-.834 1.972a.53.53 0 0 0-.023.172.465.465 0 0 0 .23.398c.15.092.342.12.475.12l1.66-.001c.01 0 .02-.006.023-.015l.575-1.28a.025.025 0 0 0-.024-.035zm-6.93-4.937H3.1a.032.032 0 0 0-.034.033c0 1.048-.01 2.795-.01 6.829 0 .288-.269.262-.28.262h-.74c-.04.001-.044.004-.04.047.001.037.465 1.064.555 1.263.01.02.03.033.051.033.157.003.767.009.938-.014.153-.02.3-.06.438-.132.3-.156.49-.419.595-.765.052-.172.075-.353.075-.533.002-2.33 0-4.66-.007-6.991a.032.032 0 0 0-.032-.032zm11.784 6.896c0-.014-.01-.021-.024-.022h-1.465c-.048-.001-.049-.002-.05-.049v-4.66c0-.072-.005-.07.07-.07h.863c.08 0 .075.004.075-.074V8.393c0-.082.006-.076-.08-.076h-3.5c-.064 0-.075-.006-.075.073v1.445c0 .083-.006.077.08.077h.854c.075 0 .07-.004.07.07v4.624c0 .095.008.084-.085.084-.37 0-1.11-.002-1.304 0-.048.001-.06.03-.06.03l-.697 1.519s-.014.025-.008.036c.006.01.013.008.058.008 1.748.003 3.495.002 5.243.002.03-.001.034-.006.035-.033v-1.539zm4.177-3.43c0 .013-.007.023-.02.024-.346.006-.692.004-1.037.004-.014-.002-.022-.01-.022-.024-.005-.434-.007-.869-.01-1.303 0-.072-.006-.071.07-.07l.733-.003c.041 0 .081.002.12.015.093.025.16.107.165.204.006.431.002 1.153.001 1.153zm2.67.244a1.953 1.953 0 0 0-.883-.222h-.18c-.04-.001-.04-.003-.042-.04V10.21c0-.132-.007-.263-.025-.394a1.823 1.823 0 0 0-.153-.53 1.533 1.533 0 0 0-.677-.71 2.167 2.167 0 0 0-1-.258c-.153-.003-.567 0-.72 0-.07 0-.068.004-.068-.065V7.76c0-.031-.01-.041-.046-.039H17.93s-.016 0-.023.007c-.006.006-.008.012-.008.023v.546c-.008.036-.057.015-.082.022h-.95c-.022.002-.028.008-.03.032v1.481c0 .09-.004.082.082.082h.913c.082 0 .072.128.072.128V11.19s.003.117-.06.117h-1.482c-.068 0-.06.082-.06.082v1.445s-.01.068.064.068h1.457c.082 0 .076-.006.076.079v3.225c0 .088-.007.081.082.081h1.43c.09 0 .082.007.082-.08v-3.27c0-.029.006-.035.033-.035l2.323-.003c.098 0 .191.02.28.061a.46.46 0 0 1 .274.407c.008.395.003.79.003 1.185 0 .259-.107.367-.33.367h-1.218c-.023.002-.029.008-.028.033.184.437.374.871.57 1.303a.045.045 0 0 0 .04.026c.17.005.34.002.51.003.15-.002.517.004.666-.01a2.03 2.03 0 0 0 .408-.075c.59-.18.975-.698.976-1.313v-1.981c0-.128-.01-.254-.034-.38 0 .078-.029-.641-.724-.998z"/>
+      </svg>
+      <span class="icon-label">小红书</span>
+      <div class="icon-ripple"></div>
+    </div>
+
+    <!-- ====== 动漫装饰水晶 ====== -->
+    <div class="crystal deco-crystal crystal-l1"></div>
+    <div class="crystal deco-crystal crystal-l2"></div>
+    <div class="crystal deco-crystal crystal-l3"></div>
+    <div class="crystal deco-crystal crystal-r1"></div>
+    <div class="crystal deco-crystal crystal-r2"></div>
+    <div class="crystal deco-crystal crystal-r3"></div>
+    <div class="sparkle deco-sparkle sparkle-l1"></div>
+    <div class="sparkle deco-sparkle sparkle-l2"></div>
+    <div class="sparkle deco-sparkle sparkle-r1"></div>
+    <div class="sparkle deco-sparkle sparkle-r2"></div>
+
+    <!-- ====== 中央 Glass 控制卡片 ====== -->
+    <div class="hero-control" id="heroControl">
+      <!-- 实时统计数字 -->
+      <div class="hc-stats">
+        <div class="hc-stat">
+          <div class="hc-stat-ring">
+            <svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" class="stat-bg"/><circle cx="20" cy="20" r="17" class="stat-fill" id="statRingVideos"/></svg>
+          </div>
+          <div class="hc-stat-num" id="statVideos">0</div>
+          <div class="hc-stat-label">视频</div>
+        </div>
+        <div class="hc-stat">
+          <div class="hc-stat-ring">
+            <svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" class="stat-bg"/><circle cx="20" cy="20" r="17" class="stat-fill" id="statRingUsers"/></svg>
+          </div>
+          <div class="hc-stat-num" id="statUsers">0</div>
+          <div class="hc-stat-label">用户</div>
+        </div>
+        <div class="hc-stat">
+          <div class="hc-stat-ring">
+            <svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" class="stat-bg"/><circle cx="20" cy="20" r="17" class="stat-fill" id="statRingOps"/></svg>
+          </div>
+          <div class="hc-stat-num" id="statOps">0</div>
+          <div class="hc-stat-label">交互</div>
+        </div>
+      </div>
+
+      <!-- 任务标题与输入 -->
+      <h2 class="hc-title" id="hcTitle">相似用户分析</h2>
+      <p class="hc-desc" id="hcDesc">基于用户-标签矩阵的余弦相似度计算，找出与目标用户兴趣最相似的用户群。</p>
+      <div class="hc-inputs" id="hcInputs">
+        <input type="text" class="input-field" id="mainInput" placeholder="请输入用户ID...">
+        <button class="btn btn-primary" id="mainBtn" onclick="executeCurrentTask()">开始分析</button>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ========== 热门排行榜 ========== -->
+  <section class="leaderboard-section" id="leaderboardSection" style="display:none">
+    <div class="leaderboard-header">
+      <h2 class="leaderboard-title">热门排行 TOP-10</h2>
+      <div class="leaderboard-sort">
+        <button class="lb-sort-btn active" data-sort="views">观看量</button>
+        <button class="lb-sort-btn" data-sort="likes">点赞数</button>
+        <button class="lb-sort-btn" data-sort="ratio">点赞率</button>
+      </div>
+    </div>
+    <div class="leaderboard-grid" id="leaderboardGrid"></div>
+  </section>
+
+  <!-- ========== 结果区域 ========== -->
+  <main class="content-area">
+    <div class="result-area" id="result1"></div>
+    <div class="result-area" id="result2"></div>
+    <div class="result-area" id="result3"></div>
+    <div class="result-area" id="result4"></div>
+    <div class="result-area" id="result5"></div>
+    <div class="result-area" id="result6"></div>
+  </main>
+
+  <!-- Toast -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- 图片放大 Lightbox -->
+  <div class="lightbox-overlay" id="lightboxOverlay">
+    <button class="lightbox-close" id="lightboxClose">&times;</button>
+    <img class="lightbox-img" id="lightboxImg" src="" alt="放大预览">
+  </div>
+
+  <script src="/static/js/app.js?v=7"></script>
+</body>
+</html>

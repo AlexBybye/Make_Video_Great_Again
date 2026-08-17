@@ -57,13 +57,15 @@ class LinUCBBandit:
         return self.arm_metrics[arm_id]
 
     def _get_context_vector(self, user_cluster_id, video_cluster_id):
-        """构造上下文向量 X"""
+        """构造上下文向量 X (L2归一化)"""
         try:
-            # 从 DataFrame 中按索引查询并获取 NumPy 数组
-            u_emb = self.E_CU.loc[user_cluster_id].values
-            v_emb = self.E_CV.loc[video_cluster_id].values
-            # X = [E_CU || E_CV]
+            u_emb = self.E_CU.loc[user_cluster_id].values.astype(np.float64)
+            v_emb = self.E_CV.loc[video_cluster_id].values.astype(np.float64)
             X = np.concatenate([u_emb, v_emb])
+            # L2 归一化，避免 embedding 数值过大导致 UCB 分数爆炸
+            norm = np.linalg.norm(X)
+            if norm > 1e-8:
+                X = X / norm
             return X
         except KeyError:
             logging.warning(f"无法获取簇 Embedding: ({user_cluster_id}, {video_cluster_id}).")
