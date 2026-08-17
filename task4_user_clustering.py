@@ -1,125 +1,145 @@
 # -*- coding: utf-8 -*-
+# task4_user_clustering.py — 用户聚类分析
+# 使用自建 CSRSparseMatrix 构建用户-标签矩阵, 替代 scipy CSR + pandas 扫描
+# 聚类算法仍用 sklearn (纯数值计算, 无数据结构替代必要)
+# 数据结构: CSRSparseMatrix + HashMap
+
 import time
-import pandas as pd
 import numpy as np
-from scipy.sparse import csr_matrix
 from sklearn.cluster import MiniBatchKMeans
 from sklearn.decomposition import IncrementalPCA
 from sklearn.preprocessing import StandardScaler
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import os
 import logging
+from ds.data_store import DataStore
 
-# from PyQt6.QtGui import QPixmap # 在非GUI环境下不需要导入
-
-# 配置日志
 logging.basicConfig(filename='results/user_clustering.log', level=logging.INFO)
+
+# 暗色主题
+plt.rcParams.update({
+    'font.sans-serif': ['Microsoft YaHei', 'SimHei', 'PingFang SC', 'Heiti TC', 'STHeiti', 'Arial Unicode MS'],
+    'axes.unicode_minus': False,
+    'figure.facecolor': '#0D0D1A',
+    'axes.facecolor': '#0D0D1A',
+    'axes.edgecolor': '#333355',
+    'axes.labelcolor': '#AAAACC',
+    'text.color': '#DDDDEE',
+    'xtick.color': '#8888AA',
+    'ytick.color': '#8888AA',
+    'grid.color': '#1E1E3A',
+    'grid.alpha': 0.4,
+})
 
 
 def plot_user_clusters(labels, reduced_data, n_clusters):
-    """绘制用户聚类结果图"""
-    plt.figure(figsize=(10, 8))
-    plt.rcParams['font.sans-serif'] = ['SimHei']  # 使用黑体
-    plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
+    fig, ax = plt.subplots(figsize=(11, 8))
+    fig.patch.set_facecolor('#0D0D1A')
+    ax.set_facecolor('#0D0D1A')
 
-    scatter = plt.scatter(reduced_data[:, 0], reduced_data[:, 1],
-                          c=labels, cmap='viridis',
-                          alpha=0.7, s=20, edgecolor='k', linewidth=0.3)
+    scatter = ax.scatter(reduced_data[:, 0], reduced_data[:, 1],
+                          c=labels, cmap='plasma', alpha=0.75, s=12,
+                          edgecolor='none', linewidth=0)
 
-    plt.title(f'用户聚类结果 (k={n_clusters})')
-    plt.xlabel('PCA 主成分 1')
-    plt.ylabel('PCA 主成分 2')
-    plt.colorbar(scatter, label='聚类')
-    plt.grid(True, alpha=0.2)
+    ax.set_title(f'用户兴趣聚类分布 (k={n_clusters})', fontsize=15,
+                 fontweight='bold', color='#FFFFFF', pad=14)
+    ax.set_xlabel('主成分 1', fontsize=12, color='#AAAACC')
+    ax.set_ylabel('主成分 2', fontsize=12, color='#AAAACC')
+    ax.tick_params(colors='#8888AA', labelsize=9)
+    ax.grid(True, alpha=0.25, linewidth=0.4)
 
+    cbar = fig.colorbar(scatter, ax=ax, label='聚类标签')
+    cbar.ax.yaxis.label.set_color('#AAAACC')
+    cbar.ax.tick_params(colors='#8888AA')
+    cbar.outline.set_edgecolor('#333355')
+
+    fig.tight_layout()
     plot_path = 'results/user_clusters.png'
-    plt.savefig(plot_path, dpi=300, bbox_inches='tight')
-    plt.close()
+    fig.savefig(plot_path, dpi=150, facecolor='#0D0D1A', bbox_inches='tight')
+    plt.close(fig)
     return plot_path
 
 
 def cluster_users(n_clusters=10):
-    """
-    基于观看兴趣相似性对用户进行聚类
-    返回包含聚类结果的字典
-    """
+    """基于自建 CSRSparseMatrix + sklearn 的用户聚类"""
     try:
         t1 = time.time()
-        # 确保 results 和 data 目录存在
         os.makedirs('results', exist_ok=True)
         os.makedirs('data', exist_ok=True)
 
-        # 加载数据
-        users_df = pd.read_csv('data/users.csv')
-        videos_df = pd.read_csv('data/videos.csv')
-        operations_df = pd.read_csv('data/operations.csv')
+        store = DataStore()
 
-        # ... (中间的用户-标签矩阵构建、标准化、PCA降维等代码不变) ...
-        # 确保 'id' 在 users_df 中
-        if 'id' not in users_df.columns:
-            users_df['id'] = range(len(users_df))
+        # 使用自建 CSRSparseMatrix 转 numpy 用于 sklearn
+        csr = store.user_tag_matrix
+        user_ids = store._user_tag_users
 
-        # 创建用户-标签矩阵
-        operations_with_tag = operations_df.merge(
-            videos_df[['id', 'tag']],
-            left_on='video_id',
-            right_on='id',
-            how='left'
-        )
+        n_users = csr.n_rows
+        n_tags = csr.n_cols
 
-        # 构建稀疏矩阵
-        tags = operations_with_tag['tag'].unique()
-        user_tag_counts = operations_with_tag.groupby(['user_id', 'tag']).size().reset_index(name='count')
+        # 从 CSR 提取 dense 矩阵 (sklearn 需要)
+        user_features = np.zeros((n_users, n_tags))
+        for i in range(n_users):
+            cols, vals = csr.get_row(i)
+            for c, v in zip(cols, vals):
+                user_features[i, c] = v
 
-        # 确保 user_ids 的顺序与矩阵行序对应
-        unique_user_ids = user_tag_counts['user_id'].unique()
-        user_to_idx = {user_id: idx for idx, user_id in enumerate(unique_user_ids)}
-        tag_to_idx = {tag: idx for idx, tag in enumerate(tags)}
+        logging.info(f"[Task4] 使用自建 CSR 构建 {n_users}x{n_tags} 特征矩阵")
 
-        rows = user_tag_counts['user_id'].map(user_to_idx)
-        cols = user_tag_counts['tag'].map(tag_to_idx)
-        data = user_tag_counts['count']
-
-        user_tag_sparse = csr_matrix((data, (rows, cols)),
-                                     shape=(len(user_to_idx), len(tag_to_idx)))
-
-        # 标准化数据
+        # 标准化 + PCA + KMeans
         scaler = StandardScaler(with_mean=False)
-        user_features = scaler.fit_transform(user_tag_sparse)
+        user_features_scaled = scaler.fit_transform(user_features)
 
-        # 降维和聚类
-        pca = IncrementalPCA(n_components=min(20, user_features.shape[1] - 1), batch_size=1000)
-        user_features_reduced = pca.fit_transform(user_features.toarray())
+        pca = IncrementalPCA(n_components=min(20, n_tags - 1), batch_size=1000)
+        user_features_reduced = pca.fit_transform(user_features_scaled)
 
         kmeans = MiniBatchKMeans(n_clusters=n_clusters, random_state=42, batch_size=1000, n_init=3)
         user_clusters = kmeans.fit_predict(user_features_reduced)
 
-        # 关键修改：将聚类结果映射回原始 user_id
-        cluster_map_df = pd.DataFrame({
-            'user_id_temp': unique_user_ids,
-            'cluster': user_clusters
-        })
+        # 构建 cluster_map: HashMap<int, int>
+        cluster_map = {}
+        for i, uid in enumerate(user_ids):
+            cluster_map[int(uid)] = int(user_clusters[i])
 
-        # 将聚类结果合并到原始 users_df
-        users_df_clustered = users_df.merge(
-            cluster_map_df, left_on='id', right_on='user_id_temp', how='left'
-        ).drop(columns=['user_id_temp'])
+        # 从 HashMap 获取用户信息并合并聚类结果
+        import csv
+        users_with_cluster = []
+        all_user_ids = store.users_map.keys()
+        for uid in all_user_ids:
+            u = store.users_map.get(uid)
+            if u is None:
+                continue
+            cluster = cluster_map.get(int(uid), -1)
+            users_with_cluster.append({
+                'id': int(uid),
+                'age': u.get('age', ''),
+                'gender': u.get('gender', ''),
+                'cluster': cluster
+            })
 
-        # 对于没有交互数据而没有聚类标签的用户，填充一个默认值（如 -1）
-        users_df_clustered['cluster'] = users_df_clustered['cluster'].fillna(-1).astype(int)
-
-        # 保存结果到 data 文件夹，供后续步骤读取
+        # 保存 CSV (兼容后续流程)
+        import csv as csv_writer
         output_path = 'data/users_clustered.csv'
-        users_df_clustered.to_csv(output_path, index=False)
+        fieldnames = ['id', 'age', 'gender', 'cluster']
+        with open(output_path, 'w', newline='', encoding='utf-8') as f:
+            w = csv_writer.DictWriter(f, fieldnames=fieldnames)
+            w.writeheader()
+            w.writerows(users_with_cluster)
         logging.info(f"用户聚类结果已保存至: {output_path}")
 
-        # 保存可视化
+        # 可视化
         plot_path = plot_user_clusters(user_clusters, user_features_reduced, n_clusters)
 
         t2 = time.time()
-        print(f"task4模拟耗时: {t2 - t1:.4f} 秒")
+        print(f"task4耗时 (自建数据结构): {t2 - t1:.4f} 秒")
+
+        # 返回前10条
+        preview = [{'id': u['id'], 'age': u['age'], 'cluster': u['cluster']}
+                   for u in users_with_cluster[:10]]
+
         return {
-            "data": users_df_clustered[['id', 'age', 'cluster']].head(10).to_dict('records'),
+            "data": preview,
             "plot_path": plot_path
         }
 

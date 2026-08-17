@@ -55,8 +55,8 @@ def validate_operations_data(df: pd.DataFrame) -> bool:
             return False
 
         # 检查数值范围
-        if (df['day'] < 1).any() or (df['day'] > 7).any():
-            logging.error("天数必须在1-7之间")
+        if (df['day'] < 1).any() or (df['day'] > TOTAL_DAYS).any():
+            logging.error(f"天数必须在1-{TOTAL_DAYS}之间")
             return False
 
         if not df['liked'].isin([0, 1]).all():
@@ -68,15 +68,17 @@ def validate_operations_data(df: pd.DataFrame) -> bool:
         logging.error(f"操作数据验证失败: {str(e)}")
         return False
 
+TOTAL_DAYS = 30
+
 def generate_day_weights() -> np.ndarray:
     """生成每日权重"""
-    weights = np.random.uniform(0.1, 0.4, 7)
+    weights = np.random.uniform(0.1, 0.4, TOTAL_DAYS)
     return weights / weights.sum()
 
 def generate_days(num_ops: int) -> List[int]:
     """生成操作天数"""
     weights = generate_day_weights()
-    days = np.random.choice(np.arange(1, 8), num_ops, p=weights)
+    days = np.random.choice(np.arange(1, TOTAL_DAYS + 1), num_ops, p=weights)
     return np.sort(days).tolist()
 
 def generate_users_operations(force: bool = False) -> None:

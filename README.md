@@ -1,193 +1,98 @@
-# Make Video Great Again 🎥
+# Make Video Great Again
 
-<div align="center">
+基于 Flask 的视频数据分析与推荐系统，数据结构课程大作业。
 
-![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)
-![License](https://img.shields.io/badge/License-MIT-green.svg)
-![PyQt6](https://img.shields.io/badge/PyQt6-6.9.0-purple.svg)
-![Status](https://img.shields.io/badge/Status-Active-success.svg)
+## 项目简介
 
-</div>
+本项目模拟多平台（抖音/TikTok/快手/X/Facebook）短视频推荐场景，从零构建数据结构层（HashMap、稀疏矩阵、堆、图、线段树、Trie、LRU），替代 scipy/pandas 等库的数据组织能力，并在此基础上实现相似用户查找、视频推荐、热度预测、用户聚类、视频聚类及强化学习推荐增强等分析任务，最终通过 Flask Web 界面交互式展示。
 
-## 📖 项目简介
+## 运行环境
 
-Make Video Great Again 是一个基于人工智能的视频数据分析与推荐系统，本系统采用现代化的技术栈，结合 PyQt6 构建了直观的用户界面，实现了视频数据的智能分析与处理。
+- Python 3.9–3.12（推荐 3.12）
+- 依赖包见 `requirements.txt`
 
-## ✨ 核心特性
+## 快速开始
 
-- 🎯 **智能推荐引擎**
-  - 基于协同过滤的个性化推荐
-  - 深度学习模型支持(可以随时接入)
-  - 实时推荐更新
-  
-- 📊 **高级数据分析**
-  - 用户行为模式识别
-  - 视频热度趋势预测
-  - 多维度数据可视化
-  
-- 🔍 **智能聚类分析**
-  - 用户群体智能划分
-  - 视频内容自动分类
-  - 特征工程优化
-  - 聚类结果再度优化推荐
-
-- 🎨 **现代化界面**
-  - 响应式设计
-  - 实时数据展示
-  - 交互式操作体验
-
-## 🛠️ 技术栈
-
-- **核心框架**
-  - Python 3.8+
-  - PyQt6
-  - scikit-learn
-  - TensorFlow/PyTorch
-
-- **数据处理**
-  - pandas
-  - numpy
-  - scipy
-
-- **可视化**
-  - matplotlib
-  - seaborn
-  - plotly
-
-## 🚀 快速开始
-
-### 环境要求
-
-- Python 3.8 或更高版本
-- CUDA 支持（可选，用于 GPU 加速）
-- 8GB+ RAM
-- 2GB+ 可用磁盘空间
-
-### 安装步骤
-
-1. **克隆仓库**
 ```bash
-git clone https://github.com/AlexBybye/Make_Video_Great_Again.git
-cd Make_Video_Great_Again
-```
+# 1. 创建虚拟环境
+python3.12 -m venv .venv
+source .venv/bin/activate      # macOS/Linux
+# .venv\Scripts\activate       # Windows
 
-2. **创建虚拟环境**（推荐）
-```bash
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate     # Windows
-```
-
-3. **安装依赖**
-```bash
+# 2. 安装依赖
 pip install -r requirements.txt
+
+# 3. 启动应用
+python3 app.py
+
+# 4. 浏览器访问
+# http://localhost:8080/
 ```
 
-4. **启动应用**
-```bash
-python main.py
-```
-
-## 📁 项目架构
+## 项目结构
 
 ```
 Make_Video_Great_Again/
-├── data/               # 数据存储与预处理（介于大小未储存云端）
-├── results/            # 分析结果与可视化输出
-├── resources/          # 静态资源与配置文件
-├── ui.py               # 用户界面模块
-│  
-├──# 核心功能模块
-│   ├── data_manager.py    # 数据管理
-│   ├── data_cache.py      # 缓存系统
-│   └── models/            # 机器学习模型(后续)
-├──# 分析任务模块
-│   ├── task1_similar_users.py
-│   ├── task2_recommend_videos.py
-│   ├── task3_predict_heat.py
-│   ├── task4_user_clustering.py
-│   └── task5_video_clustering.py
-├──# 爬虫模块（B站数据）
-│   ├── capture_users_operation.py
-│   └── capture_videos.py        
-├──# 新增聚类强化学习推荐模块
-│   ├── Alpha_embedding_Cluster.py
-│   ├── Beta_Thompson_Sampling.py
-│   └── Charlie_LinUCB.py
-├── test_performance.py               # 耗时计算模块
-└── main.py            # 应用入口
+├── .gitignore                      # 本地环境与生成文件忽略规则
+├── app.py                          # Flask Web 后端（端口8080）
+├── database.py                     # SQLite 数据库初始化
+├── data_manager.py                 # 数据导入管理
+├── data_cache.py                   # 数据缓存层
+├── requirements.txt                # Python 依赖
+│
+├── ds/                             # 自建数据结构层
+│   ├── hash_map.py                 # HashMap — O(1) 键值查询
+│   ├── sparse_matrix.py            # CSRSparseMatrix — 稀疏矩阵压缩存储
+│   ├── max_heap.py                 # MaxHeap — Top-K 筛选
+│   ├── segment_tree.py             # SegmentTree — O(log n) 区间和查询
+│   ├── graph.py                    # Graph — BFS 路径回溯
+│   ├── trie.py                     # Trie — 前缀搜索
+│   ├── lru_cache.py                # LRUCache — 最近最少使用缓存
+│   ├── bandit_store.py             # BanditDataStore — 强化学习数据结构
+│   └── data_store.py               # DataStore — 统一数据入口
+│
+├── task1_similar_users.py          # 任务1：相似用户分析（稀疏矩阵+余弦相似度+Top-K）
+├── task2_recommend_videos.py       # 任务2：视频推荐（图BFS协同过滤+推荐路径解释）
+├── task3_predict_heat.py           # 任务3：热度预测（线段树+ARIMA时序预测）
+├── task4_user_clustering.py        # 任务4：用户聚类（稀疏矩阵+PCA+MiniBatchKMeans）
+├── task5_video_clustering.py       # 任务5：视频聚类（SVD降维+MiniBatchKMeans）
+│
+├── Alpha_embedding_Cluster.py      # 增强算法A：SVD Embedding 聚类推荐
+├── Beta_Thompson_Sampling.py       # 增强算法B：Thompson Sampling 冷启动
+├── Charlie_LinUCB.py               # 增强算法C：LinUCB 交互式反馈训练
+│
+├── crawl_real_data.py              # 真实数据爬取（B站API）
+├── capture_videos.py               # 视频信息采集
+├── capture_users_operation.py      # 用户行为数据采集
+├── generate_videos.py              # 模拟视频生成
+├── generate_users_operations.py    # 模拟用户与行为生成
+├── test_performance.py             # 性能测试
+│
+├── data/                           # 本地生成的数据（不提交）
+├── results/                        # Embedding 数据与可视化输出
+└── web/                            # 前端
+    ├── templates/index.html        # 主页模板
+    ├── templates/test.html         # 测试页面
+    └── static/
+        ├── css/style.css           # 样式
+        └── js/app.js               # 前端交互逻辑
 ```
 
-## 🔬 功能模块详解
+## 功能模块
 
-### 1. 智能推荐系统
-- 基于协同过滤的个性化推荐
-- 深度学习模型支持
-- 实时推荐更新机制
-- 多维度特征提取
+### 六个核心分析任务
 
-### 2. 用户行为分析
-- 行为模式识别
-- 兴趣图谱构建
-- 用户画像生成
-- 群体特征分析
+| 任务 | 说明 | 核心数据结构 |
+|------|------|-------------|
+| Task1 相似用户 | 构建用户-标签稀疏矩阵，计算余弦相似度，Top-K 堆筛选 | CSRSparseMatrix + MaxHeap |
+| Task2 视频推荐 | 基于图的 BFS 协同过滤，生成推荐路径解释 | Graph + HashMap + MaxHeap |
+| Task3 热度预测 | 按天统计观看量，ARIMA 预测未来7天趋势 | SegmentTree |
+| Task4 用户聚类 | 构建用户兴趣特征矩阵，PCA 降维 + MiniBatchKMeans | CSRSparseMatrix + HashMap |
+| Task5 视频聚类 | 构建视频-用户稀疏矩阵，SVD 降维 + MiniBatchKMeans | HashMap + CSRSparseMatrix |
+| Task6 推荐增强 | SVD Embedding、Thompson Sampling、LinUCB 交互训练 | BanditDataStore |
 
-### 3. 视频内容分析
-- 热度趋势预测
-- 内容特征提取
-- 自动分类标注
-- 质量评估系统
+## 数据与生成文件
 
-### 4. 数据可视化
-- 交互式图表
-- 实时数据更新
-- 多维度展示
-- 自定义报表
-
-## 🤝 贡献指南
-
-我们欢迎各种形式的贡献，包括但不限于：
-
-- 提交问题和建议
-- 改进文档
-- 提交代码改进
-- 分享使用经验
-
-## 📄 开源协议
-
-本项目采用 MIT 协议开源，详情请查看 [LICENSE](LICENSE) 文件。
-
-## 👥 开发团队
-
-- **项目负责人**: AlexBybye
-- **核心开发者**: 
-AlexBybye BUSYING-1 happytzh
-- **UI/UX 设计**: BUSYING-1 AlexBybye
-- **强化学习等深度设计**: AlexBybye
-## 📞 联系我们
-
-- 项目主页：[GitHub](https://github.com/AlexBybye/Make_Video_Great_Again)
-
-
-## 🌟 暴力测试（亿级数据：`50000users - 500000videos - 800-1200operations`）
-- cpu: `i9-13900`
-- 内存：`2048MB`  
-- 测试结果：
-```
-| 步骤           | 耗时（秒）|
-| -----------    | -------- |
-| 生成数据        | 340.8385 |
-| 加载数据        | 359.1548 |
-| Task1 预模拟    | 7.3957   |
-| Task1 模拟1     | 0.1570   |
-| Task2 模拟      | 1.0478   |
-| Task1 模拟2     | 0.1492   |
-| Task3 模拟      | 10.0709  |
-| Task4 模拟      | 20.7974  |
-| Task5 模拟      | 14.4364  |
-```
----
-
-<div align="center">
-  <sub>Built with ❤️ by AlexBybye and contributors.</sub>
-</div> 
+- `data/` 不提交到仓库；缺少 CSV 时，首次启动会自动生成模拟数据。
+- 首次生成数据并构建自定义数据结构可能需要几分钟；需要保存聚类结果时会创建 `data/app.db`。
+- SQLite 数据库、缓存、虚拟环境、日志和生成图片已通过 `.gitignore` 排除。

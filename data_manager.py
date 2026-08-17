@@ -2,7 +2,6 @@ import os
 import sys
 import time
 import pandas as pd
-from PyQt6.QtWidgets import QMessageBox
 import generate_videos
 import generate_users_operations
 import logging
@@ -46,8 +45,7 @@ class DataManager:
         except Exception as e:
             error_msg = f"数据初始化失败: {str(e)}"
             logging.error(error_msg)
-            QMessageBox.critical(None, "数据错误", error_msg)
-            sys.exit(1)
+            raise RuntimeError(error_msg)
 
         t2 = time.time()
         print(f"初始化数据耗时: {t2 - t1:.4f} 秒")

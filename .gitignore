@@ -1,1 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.venv*/
+venv/
+.env
+
+# macOS
+.DS_Store
+
+# Local editor/project files
+.idea/
+*.iml
+*.pyproj
+
+# Logs
+*.log
+
+# Local runtime data
 data/
+
+# Generated analysis output
+results/*.png
