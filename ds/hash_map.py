@@ -11,11 +11,11 @@ class HashMap:
     _EMPTY = object()   # 标记空槽
     _DELETED = object() # 标记已删除槽 (墓碑)
 
-    def __init__(self, initial_capacity=1024):
-        self._capacity = initial_capacity
+def __init__(self, initial_capacity=1024):
+        self._capacity = max(8, int(initial_capacity or 0))
         self._size = 0
-        self._keys = [self._EMPTY] * initial_capacity
-        self._vals = [None] * initial_capacity
+        self._keys = [self._EMPTY] * self._capacity
+        self._vals = [None] * self._capacity
         self._deleted_count = 0
 
     def __len__(self):
