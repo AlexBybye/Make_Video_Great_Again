@@ -98,7 +98,7 @@ Make_Video_Great_Again/
 ├── ui.py               # 用户界面模块
 │  
 ├──# 核心功能模块
-│   ├── data_manager.py    # 数据管理
+│   ��── data_manager.py    # 数据管理
 │   ├── data_cache.py      # 缓存系统
 │   └── models/            # 机器学习模型(后续)
 ├──# 分析任务模块
@@ -142,7 +142,7 @@ Make_Video_Great_Again/
 - 交互式图表
 - 实时数据更新
 - 多维度展示
-- 自定义报表
+- ���定义报表
 
 ## 🤝 贡献指南
 
