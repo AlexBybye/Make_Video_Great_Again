@@ -1,10 +1,19 @@
-# Make Video Great Again
 
-基于 Flask 的视频数据分析与推荐系统，数据结构课程大作业。
+
+<div align="center">
+
+# Make Video Great Again
+![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)
+![License](https://img.shields.io/badge/License-MIT-green.svg)
+![Status](https://img.shields.io/badge/Status-Active-success.svg)
+
+</div>
+
+基于 Flask 的视频数据分析与推荐系统,数据结构课程大作业,一个追求高性能的视频推荐系统。
 
 ## 项目简介
 
-本项目模拟多平台（抖音/TikTok/快手/X/Facebook）短视频推荐场景，从零构建数据结构层（HashMap、稀疏矩阵、堆、图、线段树、Trie、LRU），替代 scipy/pandas 等库的数据组织能力，并在此基础上实现相似用户查找、视频推荐、热度预测、用户聚类、视频聚类及强化学习推荐增强等分析任务，最终通过 Flask Web 界面交互式展示。
+本项目采用爬取+模拟多平台（抖音/TikTok/快手/X/Facebook）短视频推荐场景，从零构建数据结构层（HashMap、稀疏矩阵、堆、图、线段树、Trie、LRU），替代 scipy/pandas 等库的数据组织能力，并在此基础上实现相似用户查找、视频推荐、热度预测、用户聚类、视频聚类及强化学习推荐增强等分析任务，最终通过 Flask Web 界面交互式展示。
 
 ## 运行环境
 
@@ -96,3 +105,53 @@ Make_Video_Great_Again/
 - `data/` 不提交到仓库；缺少 CSV 时，首次启动会自动生成模拟数据。
 - 首次生成数据并构建自定义数据结构可能需要几分钟；需要保存聚类结果时会创建 `data/app.db`。
 - SQLite 数据库、缓存、虚拟环境、日志和生成图片已通过 `.gitignore` 排除。
+
+
+</div>## 🤝 贡献指南
+
+我们欢迎各种形式的贡献，包括但不限于：
+
+- 提交问题和建议
+- 改进文档
+- 提交代码改进
+- 分享使用经验
+
+## 📄 开源协议
+
+本项目采用 MIT 协议开源，详情请查看 [LICENSE](LICENSE) 文件。
+
+## 👥 开发团队
+
+- **项目负责人**: AlexBybye
+- **核心开发者**: 
+AlexBybye BUSYING-1 happytzh
+- **UI/UX 设计**: BUSYING-1 AlexBybye
+- **强化学习等深度设计**: AlexBybye
+- **后续开源贡献者**: hhhDengggg
+## 📞 联系我们
+
+- 项目主页：[GitHub](https://github.com/AlexBybye/Make_Video_Great_Again)
+
+
+## 🌟 暴力测试（亿级数据：`50000users - 500000videos - 800-1200operations`）
+- cpu: `i9-13900`
+- 内存：`2048MB`  
+- 测试结果：
+```
+| 步骤           | 耗时（秒）|
+| -----------    | -------- |
+| 生成数据        | 340.8385 |
+| 加载数据        | 359.1548 |
+| Task1 预模拟    | 7.3957   |
+| Task1 模拟1     | 0.1570   |
+| Task2 模拟      | 1.0478   |
+| Task1 模拟2     | 0.1492   |
+| Task3 模拟      | 10.0709  |
+| Task4 模拟      | 20.7974  |
+| Task5 模拟      | 14.4364  |
+```
+---
+
+<div align="center">
+  <sub>Built with ❤️ by AlexBybye and contributors.</sub>
+</div> 
